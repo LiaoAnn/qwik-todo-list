@@ -8,8 +8,11 @@ import {
 	useContext
 } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
+import { EditIcon } from '~/components/icons/feather-edit';
+import { TrashIcon } from '~/components/icons/feather-trash';
 import { QwikLogo } from "../components/icons/qwik";
 import { v4 } from "uuid";
+import jsonTodo from "../todos.json";
 
 type ToDos = {
 	items: ToDoItem[]
@@ -25,51 +28,22 @@ type ToDoItem = {
 	isNew?: boolean;
 }
 
+type jsonTodo = {
+	title: string;
+	completed: boolean;
+}
+
 export const TODOS = createContext<ToDos>("ToDoApp");
+export const jsonTodos = jsonTodo
+	.map((todo: jsonTodo) => ({
+		...todo,
+		id: v4(),
+		created_at: Date.now()
+	}))
 
 export default component$(() => {
 	const todos = useStore<ToDos>({
-		items: [
-			{
-				id: v4(),
-				completed: true,
-				title: "1. Learn Qwik",
-				created_at: Date.now(),
-				completed_at: Date.now()
-			}, {
-				id: v4(),
-				completed: true,
-				title: "2. Learn Next.js",
-				created_at: Date.now()
-			}, {
-				id: v4(),
-				completed: true,
-				title: "3. Finish ToDo App with Qwik",
-				created_at: Date.now(),
-				completed_at: Date.now()
-			}, {
-				id: v4(),
-				completed: true,
-				title: "4. Finish ToDo App with Next.js",
-				created_at: Date.now()
-			}, {
-				id: v4(),
-				completed: false,
-				title: "5. Compare ToDo App with Qwik and Next.js",
-				created_at: Date.now()
-			}, {
-				id: v4(),
-				completed: false,
-				title: "6. Write a blog post about it",
-				created_at: Date.now(),
-				completed_at: Date.now()
-			}, {
-				id: v4(),
-				completed: false,
-				title: "7. Get A+ on the 資工導論🥲",
-				created_at: Date.now()
-			}
-		]
+		items: jsonTodos
 	}, { recursive: true });
 	useContextProvider(TODOS, todos);
 	const imcomplete = todos.items
@@ -90,14 +64,14 @@ export default component$(() => {
 							<Item
 								key={todo.title}
 								item={todo}
-								pxTop={index * 76}
+								pxTop={index * 54}
 								editing={todo.isNew || false}
 							>
 							</Item>
 						))
 				}
 			</ul>
-			<Navigation></Navigation>
+			<Navigation />
 		</div>
 	);
 });
@@ -123,54 +97,64 @@ export const Item = component$((prop: Prop) => {
 	})
 
 	return (
-		<li class={{ complete: prop.item.completed, editing: state.editing }} style={{ top: `${prop.pxTop}px` }}>
+		<li class={{ completed: prop.item.completed, editing: state.editing }} style={{ top: `${prop.pxTop}px` }}>
 			<div className="view">
-				<input
-					type="checkbox"
-					class="toggle"
-					checked={prop.item.completed}
-					onChange$={(e: any) => {
-						const checked = (e.target as HTMLInputElement).checked;
-						prop.item.completed = checked;
-						if (checked) {
-							prop.item.completed_at = Date.now();
-						} else {
-							delete prop.item.completed_at;
-						}
-					}}
-				/>
-				<label onDblClick$={() => state.editing = true}>{prop.item.title}</label>
-				<button
-					class="destroy"
-					onClick$={() => {
-						todos.items = todos.items.filter(todo => todo.title != prop.item.title)
-					}}
-				></button>
+				{
+					state.editing ? (
+						<input
+							class="edit"
+							ref={editInput}
+							value={prop.item.title}
+							onBlur$={() => {
+								state.editing = false;
+							}}
+							onkeydown$={(e: any) => {
+								switch (e.keyCode) {
+									case 27:
+										state.editing = false;
+										break;
+									case 13:
+										prop.item.title = (e.target as HTMLInputElement).value;
+										state.editing = false;
+										break;
+								}
+							}}
+						/>
+					) :
+						<>
+							<label>
+								<input
+									type="checkbox"
+									class="toggle"
+									checked={prop.item.completed}
+									onChange$={(e: any) => {
+										const checked = (e.target as HTMLInputElement).checked;
+										setTimeout(() => {
+											prop.item.completed = checked;
+											if (checked) {
+												prop.item.completed_at = Date.now();
+											} else {
+												delete prop.item.completed_at;
+											}
+										}, 300);
+									}}
+								/>
+								<span>
+									{prop.item.title}
+								</span>
+							</label>
+							<div className="actions">
+								<button onClick$={() => { state.editing = true }}>
+									<EditIcon />
+								</button>
+								<button onClick$={() => { todos.items = todos.items.filter(todo => todo.id != prop.item.id) }}>
+									<TrashIcon />
+								</button>
+							</div>
+						</>
+				}
 			</div>
-
-			{state.editing ? (
-				<input
-					class="edit"
-					ref={editInput}
-					value={prop.item.title}
-					onBlur$={() => {
-						state.editing = false;
-					}}
-					onkeydown$={(e: any) => {
-						switch (e.keyCode) {
-							case 27:
-								state.editing = false;
-								break;
-							case 13:
-								prop.item.title = (e.target as HTMLInputElement).value;
-								state.editing = false;
-								break;
-						}
-					}}
-				/>) :
-				<></>
-			}
-		</li>
+		</li >
 	)
 })
 
