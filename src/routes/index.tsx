@@ -12,7 +12,6 @@ import { EditIcon } from '~/components/icons/feather-edit';
 import { TrashIcon } from '~/components/icons/feather-trash';
 import { QwikLogo } from "../components/icons/qwik";
 import { v4 } from "uuid";
-import jsonTodo from "../todos.json";
 
 type ToDos = {
 	items: ToDoItem[]
@@ -28,22 +27,51 @@ type ToDoItem = {
 	isNew?: boolean;
 }
 
-type jsonTodo = {
-	title: string;
-	completed: boolean;
-}
-
 export const TODOS = createContext<ToDos>("ToDoApp");
-export const jsonTodos = jsonTodo
-	.map((todo: jsonTodo) => ({
-		...todo,
-		id: v4(),
-		created_at: Date.now()
-	}))
 
 export default component$(() => {
 	const todos = useStore<ToDos>({
-		items: jsonTodos
+		items: [
+			{
+				id: v4(),
+				completed: true,
+				title: "1. Learn Qwik",
+				created_at: Date.now(),
+				completed_at: Date.now()
+			}, {
+				id: v4(),
+				completed: true,
+				title: "2. Learn Next.js",
+				created_at: Date.now()
+			}, {
+				id: v4(),
+				completed: true,
+				title: "3. Finish ToDo App with Qwik",
+				created_at: Date.now(),
+				completed_at: Date.now()
+			}, {
+				id: v4(),
+				completed: true,
+				title: "4. Finish ToDo App with Next.js",
+				created_at: Date.now()
+			}, {
+				id: v4(),
+				completed: false,
+				title: "5. Compare ToDo App with Qwik and Next.js",
+				created_at: Date.now()
+			}, {
+				id: v4(),
+				completed: false,
+				title: "6. Write a blog post about it",
+				created_at: Date.now(),
+				completed_at: Date.now()
+			}, {
+				id: v4(),
+				completed: false,
+				title: "7. Get A+ on the 資工導論🥲",
+				created_at: Date.now()
+			}
+		]
 	}, { recursive: true });
 	useContextProvider(TODOS, todos);
 	const imcomplete = todos.items
